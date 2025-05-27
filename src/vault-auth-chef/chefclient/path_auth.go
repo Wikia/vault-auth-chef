@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/go-chef/chef"
-	"github.com/hashicorp/vault/helper/policyutil"
-	"github.com/hashicorp/vault/logical"
-	"github.com/hashicorp/vault/logical/framework"
+	"github.com/hashicorp/vault/sdk/helper/policyutil"
+	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 )
@@ -217,17 +217,24 @@ func (b *backend) verifyCreds(ctx context.Context, req *logical.Request, client,
 	}
 
 	// Parse TTLs
-	ttl, maxTTL, err := b.SanitizeTTLStr(config.TTL.String(), config.MaxTTL.String())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to sanitize TTLs")
-	}
+	// old onde
+  // ttl, maxTTL, err := framework.SanitizeTTLStr(config.TTL.String(), config.MaxTTL.String())
+  ttlStr, ok := req.Data["ttl"].(string)
+  if !ok {
+	  ttlStr = ""
+  }
+
+  ttl, err := SanitizeTTLStr(ttlStr, b.Backend.System())
+  if err != nil {
+    return nil, fmt.Errorf("invalid TTL: %v", err)
+  }
 
 	// Return the response
 	return &verifyResp{
 		policies: policies,
 		node:     &node,
 		ttl:      ttl,
-		maxTTL:   maxTTL,
+		maxTTL:   b.Backend.System().MaxLeaseTTL(),
 	}, nil
 }
 
