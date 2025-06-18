@@ -75,7 +75,7 @@ func (b *backend) pathAuthLogin(ctx context.Context, req *logical.Request, d *fr
 			DisplayName: creds.node.Name,
 			LeaseOptions: logical.LeaseOptions{
 				TTL:       creds.ttl,
-				Renewable: true,
+				Renewable: false,
 			},
 		},
 	}, nil
